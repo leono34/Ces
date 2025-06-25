@@ -10,32 +10,16 @@ if ($conn->connect_error) {
     exit();
 }
 
-// Variables para respuesta
-$response = [
-    "total_incidencias" => 0,
-    "total_clientes" => 0,
-    "incidencias_pendientes" => 0,
-    "incidencias_finalizadas" => 0,
-    "prioridad" => [
-        "alta" => 0,
-        "media" => 0,
-        "baja" => 0
-    ],
-    "meses" => [],
-    "datos_mes" => [],
-    "estados" => [],
-    "datos_estados" => []
-];
 
 // Consultas generales
-$response["total_incidencias"] = (int) $conn->query("SELECT COUNT(*) as total FROM incidencia")->fetch_assoc()['total'];
-$response["total_clientes"] = (int) $conn->query("SELECT COUNT(*) as total FROM clientes")->fetch_assoc()['total'];
-$response["incidencias_pendientes"] = (int) $conn->query("SELECT COUNT(*) as total FROM incidencia WHERE id_estado = 1")->fetch_assoc()['total'];
-$response["incidencias_finalizadas"] = (int) $conn->query("SELECT COUNT(*) as total FROM incidencia WHERE id_estado = 4")->fetch_assoc()['total'];
+    $response["total_incidencias"] = (int) $conn->query("SELECT COUNT(*) as total FROM incidencia")->fetch_assoc()['total'];
+    $response["total_clientes"] = (int) $conn->query("SELECT COUNT(*) as total FROM clientes")->fetch_assoc()['total'];
+    $response["incidencias_pendientes"] = (int) $conn->query("SELECT COUNT(*) as total FROM incidencia WHERE id_estado = 1")->fetch_assoc()['total'];
+    $response["incidencias_finalizadas"] = (int) $conn->query("SELECT COUNT(*) as total FROM incidencia WHERE id_estado = 4")->fetch_assoc()['total'];
 
-$response["prioridad"]["alta"] = (int) $conn->query("SELECT COUNT(*) as total FROM incidencia WHERE id_prioridad = 1")->fetch_assoc()['total'];
-$response["prioridad"]["media"] = (int) $conn->query("SELECT COUNT(*) as total FROM incidencia WHERE id_prioridad = 2")->fetch_assoc()['total'];
-$response["prioridad"]["baja"] = (int) $conn->query("SELECT COUNT(*) as total FROM incidencia WHERE id_prioridad = 3")->fetch_assoc()['total'];
+    $response["prioridad"]["alta"] = (int) $conn->query("SELECT COUNT(*) as total FROM incidencia WHERE id_prioridad = 1")->fetch_assoc()['total'];
+    $response["prioridad"]["media"] = (int) $conn->query("SELECT COUNT(*) as total FROM incidencia WHERE id_prioridad = 2")->fetch_assoc()['total'];
+    $response["prioridad"]["baja"] = (int) $conn->query("SELECT COUNT(*) as total FROM incidencia WHERE id_prioridad = 3")->fetch_assoc()['total'];
 
 // Incidencias por mes
 $resMes = $conn->query("

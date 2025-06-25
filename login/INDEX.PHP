@@ -29,6 +29,47 @@ if (isset($_GET["eliminar"])) {
     exit();
 }
 
+
+// Consultas generales
+$response["total_incidencias"] = (int) $conn->query("SELECT COUNT(*) as total FROM incidencia")->fetch_assoc()['total'];
+$response["total_clientes"] = (int) $conn->query("SELECT COUNT(*) as total FROM clientes")->fetch_assoc()['total'];
+$response["incidencias_pendientes"] = (int) $conn->query("SELECT COUNT(*) as total FROM incidencia WHERE id_estado = 1")->fetch_assoc()['total'];
+$response["incidencias_finalizadas"] = (int) $conn->query("SELECT COUNT(*) as total FROM incidencia WHERE id_estado = 4")->fetch_assoc()['total'];
+
+$response["prioridad"]["alta"] = (int) $conn->query("SELECT COUNT(*) as total FROM incidencia WHERE id_prioridad = 1")->fetch_assoc()['total'];
+$response["prioridad"]["media"] = (int) $conn->query("SELECT COUNT(*) as total FROM incidencia WHERE id_prioridad = 2")->fetch_assoc()['total'];
+$response["prioridad"]["baja"] = (int) $conn->query("SELECT COUNT(*) as total FROM incidencia WHERE id_prioridad = 3")->fetch_assoc()['total'];
+
+// Incidencias por mes
+$resMes = $conn->query("
+    SELECT 
+        MONTH(fecha_inicio) as mes,
+        MONTHNAME(fecha_inicio) as nombre_mes,
+        COUNT(*) as total 
+    FROM incidencia 
+    WHERE fecha_inicio >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
+    GROUP BY MONTH(fecha_inicio), MONTHNAME(fecha_inicio)
+    ORDER BY MONTH(fecha_inicio)
+");
+
+while($row = $resMes->fetch_assoc()) {
+    $response["meses"][] = substr($row['nombre_mes'], 0, 3);
+    $response["datos_mes"][] = (int) $row['total'];
+}
+
+// Estados
+$resEstados = $conn->query("
+    SELECT e.nombre_estado, COUNT(i.id_incidencia) as total
+    FROM estados_reclamos e
+    LEFT JOIN incidencia i ON e.id_estado = i.id_estado
+    GROUP BY e.id_estado, e.nombre_estado
+");
+
+while($row = $resEstados->fetch_assoc()) {
+    $response["estados"][] = $row['nombre_estado'];
+    $response["datos_estados"][] = (int) $row['total'];
+}
+
 ?>
 
 <!DOCTYPE html>
@@ -155,15 +196,6 @@ if (isset($_SESSION['error']) && $_SESSION['error'] == 'duplicado') {
         console.log("script inline ejecutado");
       }
     });
-
-    // 💡 Cargar dashboard.js manualmente si es necesario
-    const scriptExistente = document.querySelector('script[src="../js/dashboard.js"]');
-    if (!scriptExistente) {
-      const scriptDashboard = document.createElement('script');
-      scriptDashboard.src = '../js/dashboard.js';
-      scriptDashboard.async = false;
-      document.body.appendChild(scriptDashboard);
-    }
   });
 
 </script>

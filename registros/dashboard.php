@@ -1,59 +1,3 @@
-<?php
-            // Conexión a la base de datos
-            include '../login/CONEXIONBD.php';
-            $conn = obtenerConexion();
-
-            // Verificar conexión
-            if ($conn->connect_error) {
-                die("Conexión fallida: " . $conn->connect_error);
-            }
-
-            // Consultas para obtener estadísticas
-            $total_incidencias = $conn->query("SELECT COUNT(*) as total FROM incidencia")->fetch_assoc()['total'];
-            $total_clientes = $conn->query("SELECT COUNT(*) as total FROM clientes")->fetch_assoc()['total'];
-            $incidencias_pendientes = $conn->query("SELECT COUNT(*) as total FROM incidencia WHERE id_estado = 1")->fetch_assoc()['total'];
-            $incidencias_finalizadas = $conn->query("SELECT COUNT(*) as total FROM incidencia WHERE id_estado = 4")->fetch_assoc()['total'];
-
-            // Estadísticas por prioridad
-            $prioridad_alta = $conn->query("SELECT COUNT(*) as total FROM incidencia WHERE id_prioridad = 1")->fetch_assoc()['total'];
-            $prioridad_media = $conn->query("SELECT COUNT(*) as total FROM incidencia WHERE id_prioridad = 2")->fetch_assoc()['total'];
-            $prioridad_baja = $conn->query("SELECT COUNT(*) as total FROM incidencia WHERE id_prioridad = 3")->fetch_assoc()['total'];
-
-            // Incidencias por mes (últimos 6 meses)
-            $incidencias_por_mes = $conn->query("
-                SELECT 
-                    MONTH(fecha_inicio) as mes,
-                    MONTHNAME(fecha_inicio) as nombre_mes,
-                    COUNT(*) as total 
-                FROM incidencia 
-                WHERE fecha_inicio >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
-                GROUP BY MONTH(fecha_inicio), MONTHNAME(fecha_inicio)
-                ORDER BY MONTH(fecha_inicio)
-            ");
-
-            $meses = [];
-            $datos_mes = [];
-            while($row = $incidencias_por_mes->fetch_assoc()) {
-                $meses[] = substr($row['nombre_mes'], 0, 3);
-                $datos_mes[] = $row['total'];
-            }
-
-            // Estados de incidencias para gráfico
-            $estados_query = $conn->query("
-                SELECT e.nombre_estado, COUNT(i.id_incidencia) as total
-                FROM estados_reclamos e
-                LEFT JOIN incidencia i ON e.id_estado = i.id_estado
-                GROUP BY e.id_estado, e.nombre_estado
-            ");
-
-            $estados = [];
-            $datos_estados = [];
-            while($row = $estados_query->fetch_assoc()) {
-                $estados[] = $row['nombre_estado'];
-                $datos_estados[] = $row['total'];
-            }
-?>
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -62,7 +6,6 @@
     <title>Dashboard - Sistema de Incidencias</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="../js/dashboard.js"></script>
         <style>
             .dashboard-container {
                 padding: 20px;
@@ -270,7 +213,7 @@
                 <div class="stat-icon pink">
                     <i class="fas fa-exclamation-triangle"></i>
                 </div>
-                <div class="stat-number"><?= number_format($total_incidencias) ?></div>
+                <div class="stat-number"id="totalIncidencias"></div>
                 <div class="stat-label">Total Incidencias</div>
                 <div class="stat-change positive">
                     <i class="fas fa-arrow-up"></i>
@@ -282,7 +225,7 @@
                 <div class="stat-icon green">
                     <i class="fas fa-users"></i>
                 </div>
-                <div class="stat-number"><?= number_format($total_clientes) ?></div>
+                <div class="stat-number"id="totalClientes"></div>
                 <div class="stat-label">Total Clientes</div>
                 <div class="stat-change positive">
                     <i class="fas fa-arrow-up"></i>
@@ -294,7 +237,7 @@
                 <div class="stat-icon blue">
                     <i class="fas fa-clock"></i>
                 </div>
-                <div class="stat-number"><?= number_format($incidencias_pendientes) ?></div>
+                <div class="stat-number"id="incidenciasPendientes"></div>
                 <div class="stat-label">Incidencias Pendientes</div>
                 <div class="stat-change negative">
                     <i class="fas fa-arrow-down"></i>
@@ -306,7 +249,7 @@
                 <div class="stat-icon orange">
                     <i class="fas fa-check-circle"></i>
                 </div>
-                <div class="stat-number"><?= number_format($incidencias_finalizadas) ?></div>
+                <div class="stat-number"id="incidenciasFinalizadas"></div>
                 <div class="stat-label">Incidencias Resueltas</div>
                 <div class="stat-change positive">
                     <i class="fas fa-arrow-up"></i>
@@ -341,128 +284,30 @@
                 <div class="chart-subtitle">Clasificación actual</div>
                 <div class="priority-grid">
                     <div class="priority-item">
-                        <div class="priority-number"><?= $prioridad_alta ?></div>
+                        <div class="priority-number" id="prioridadAlta"></div>
                         <div class="priority-label">Alta Prioridad</div>
                     </div>
                     <div class="priority-item">
-                        <div class="priority-number"><?= $prioridad_media ?></div>
+                        <div class="priority-number" id="prioridadMedia"></div>
                         <div class="priority-label">Media Prioridad</div>
                     </div>
                     <div class="priority-item">
-                        <div class="priority-number"><?= $prioridad_baja ?></div>
+                        <div class="priority-number" id="prioridadBaja"></div>
                         <div class="priority-label">Baja Prioridad</div>
                     </div>
                 </div>
             </div>
-            <!-- Gráfico de Test -->
+            <!-- Gráfico de Test
             <div class="chart-card  orange">
                 <div class="chart-title">Gráfico de Estados CLientes</div>
                 <div class="chart-subtitle">Gráfico de prueba para verificar funcionalidad</div>
                 <div class="chart-container">
                     <canvas id="testChart"></canvas>
-            </div>
+            </div> -->
 
         </div>
     </div>
 
-<script>
-     window.addEventListener('DOMContentLoaded', () => {
-    console.log("Dashboard script ejecutado correctamente"); 
-        // Gráfico de barras - Incidencias por mes
-        const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
-        new Chart(monthlyCtx, {
-            type: 'bar',
-            data: {
-                labels: <?= json_encode($meses) ?>,
-                datasets: [{
-                    data: <?= json_encode($datos_mes) ?>,
-                    backgroundColor: 'rgba(255, 255, 255, 0.8)',
-                    borderColor: 'rgba(255, 255, 255, 1)',
-                    borderWidth: 2,
-                    borderRadius: 8,
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            color: 'rgba(255, 255, 255, 0.8)'
-                        },
-                        grid: {
-                            color: 'rgba(255, 255, 255, 0.2)'
-                        }
-                    },
-                    x: {
-                        ticks: {
-                            color: 'rgba(255, 255, 255, 0.8)'
-                        },
-                        grid: {
-                            display: false
-                        }
-                    }
-                }
-            }
-        });
-
-        // Gráfico de línea - Estados
-        const statusCtx = document.getElementById('statusChart').getContext('2d');
-        new Chart(statusCtx, {
-            type: 'line',
-            data: {
-                labels: <?= json_encode($estados) ?>,
-                datasets: [{
-                    data: <?= json_encode($datos_estados) ?>,
-                    borderColor: 'rgba(255, 255, 255, 1)',
-                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                    borderWidth: 3,
-                    fill: true,
-                    tension: 0.4,
-                    pointBackgroundColor: 'rgba(255, 255, 255, 1)',
-                    pointBorderColor: 'rgba(255, 255, 255, 1)',
-                    pointRadius: 6,
-                    pointHoverRadius: 8,
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            color: 'rgba(255, 255, 255, 0.8)'
-                        },
-                        grid: {
-                            color: 'rgba(255, 255, 255, 0.2)'
-                        }
-                    },
-                    x: {
-                        ticks: {
-                            color: 'rgba(255, 255, 255, 0.8)'
-                        },
-                        grid: {
-                            color: 'rgba(255, 255, 255, 0.2)'
-                        }
-                    }
-                }
-            }
-        });
-    
-    });
-</script>
 
 </body>
 </html>
