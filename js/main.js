@@ -148,7 +148,69 @@ document.addEventListener('click', function(event) {
     if (event.target && event.target.id === 'btnLimpiarFiltroSeguimiento') { // Para limpiar filtros de seguimientos
         buscarSeguimientos(true); // Indica que se deben limpiar los filtros
     }
+    if (event.target && event.target.id === 'btnGenerarReporteIncidencia') {
+        event.preventDefault(); // Prevenir la acción por defecto del enlace
+        generarReporteIncidencias();
+    }
 });
+
+function generarReporteIncidencias() {
+    const tipoBusquedaElement = document.getElementById('tipo_busqueda_incidencia');
+    const valorBusquedaElement = document.getElementById('valor_busqueda');
+
+    let tipoFiltro = '';
+    let valorFiltro = '';
+
+    if (tipoBusquedaElement && valorBusquedaElement) {
+        tipoFiltro = tipoBusquedaElement.value;
+        valorFiltro = valorBusquedaElement.value.trim();
+    }
+
+    const params = new URLSearchParams();
+    if (tipoFiltro) { // Solo añadir parámetros si hay un tipo de búsqueda seleccionado
+        params.append('tipo_filtro', tipoFiltro);
+        if (valorFiltro) { // Y si hay un valor de búsqueda
+             params.append('valor_filtro', valorFiltro);
+        } else if (tipoFiltro && !valorFiltro) {
+            // Si hay tipo pero no valor, y el tipo lo requiere (ej. dni, prioridad),
+            // podríamos alertar o decidir no enviar 'valor_filtro' o enviar uno vacío.
+            // Por ahora, si hay tipo y no valor, solo se pasará el tipo si el script PHP lo maneja.
+            // O, más estrictamente, podríamos requerir valor si el tipo no es para "todos".
+            // Para el reporte, es probable que si hay tipo, se espere valor.
+            // Si tipoFiltro está seleccionado pero valorFiltro está vacío,
+            // decidimos NO aplicar ese filtro para el reporte, o el script PHP debe manejarlo.
+            // Para ser consistentes con la búsqueda, si el tipo requiere valor, este debería estar.
+            // Si el usuario quiere "todos" para un tipo, no debería seleccionar el tipo.
+            // Si el usuario borra el valor pero deja el tipo, no se envía el valor.
+            // El script PHP decidirá qué hacer si recibe tipo_filtro sin valor_filtro.
+            // Por simplicidad, si tipoFiltro está y valorFiltro no, solo se pasa tipoFiltro.
+            // Esto es menos problemático para un reporte de "todos" si tipoFiltro está vacío.
+        }
+    }
+    // Si tipoFiltro está vacío, params quedará vacío, y el reporte será de todos.
+    // Si tipoFiltro está pero valorFiltro no (y el tipo lo requiere), el script PHP debe decidir.
+    // Mejor: solo añadir valor_filtro si existe.
+    if (tipoFiltro && valorFiltro) {
+        // params ya tiene tipo_filtro
+    } else if (tipoFiltro && !valorFiltro) {
+        // Si un tipo de filtro que usualmente requiere un valor (como 'dni_cliente' o 'prioridad')
+        // se selecciona pero no se proporciona un valor, el reporte podría interpretarse
+        // como "todos los de ese tipo" (lo cual no tiene sentido) o simplemente no aplicar ese filtro.
+        // Para el reporte, si el tipo está pero el valor no, es más seguro NO pasar el tipo_filtro.
+        // O que el script PHP ignore un tipo_filtro si su valor_filtro correspondiente falta y es requerido.
+        // Reconsiderando: la URL debe ser clara. Si tipo_filtro está, valor_filtro debe estar si el tipo lo implica.
+        // Si el valor está vacío para un tipo que lo requiere, la búsqueda normal da alerta.
+        // Para el reporte, podríamos hacer lo mismo o simplemente no filtrar por ese criterio.
+        // Vamos a pasar lo que haya, el script PHP decidirá.
+        // Si tipoFiltro existe y valorFiltro NO, params solo tendrá tipo_filtro.
+        // Si tipoFiltro NO existe, params estará vacío.
+    }
+
+
+    const url = `../php/generar_reporte_incidencias_pdf.php?${params.toString()}`;
+    window.location.href = url; // Redirigir para descargar/ver el PDF
+}
+
 
 function buscarSeguimientos(limpiarFiltros = false) {
     const tipoBusquedaElement = document.getElementById('tipo_busqueda_seguimiento');
