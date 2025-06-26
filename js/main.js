@@ -145,43 +145,65 @@ document.addEventListener('click', function(event) {
 });
 
 function buscarIncidencias() {
-    const tipoBusqueda = document.getElementById('tipo_busqueda_incidencia').value;
-    const valorBusqueda = document.getElementById('valor_busqueda').value.trim();
+    const tipoBusquedaElement = document.getElementById('tipo_busqueda_incidencia');
+    const valorBusquedaElement = document.getElementById('valor_busqueda');
+
+    if (!tipoBusquedaElement || !valorBusquedaElement) {
+        console.error("Elementos de búsqueda no encontrados en el DOM.");
+        return;
+    }
+
+    const tipoBusqueda = tipoBusquedaElement.value;
+    const valorBusqueda = valorBusquedaElement.value.trim();
 
     if (!tipoBusqueda) {
         alert('Por favor, seleccione un tipo de búsqueda.');
         return;
     }
 
-    if (tipoBusqueda === 'dni_cliente' && valorBusqueda === '') {
-        alert('Por favor, ingrese un DNI para buscar.');
+    if ((tipoBusqueda === 'dni_cliente' || tipoBusqueda === 'prioridad') && valorBusqueda === '') {
+        if (tipoBusqueda === 'dni_cliente') {
+            alert('Por favor, ingrese un DNI para buscar.');
+        } else { // prioridad
+            alert('Por favor, ingrese un valor para la prioridad (ej: Alta, Media, Baja).');
+        }
         return;
     }
 
-    // Si es prioridad_alta, no necesitamos valor de búsqueda adicional por ahora,
-    // pero podríamos quererlo si el input 'valor_busqueda' se usara para otras prioridades.
-
-    let url = window.location.pathname; // Obtiene la URL actual sin parámetros
     const params = new URLSearchParams();
-
     params.append('tipo_filtro', tipoBusqueda);
-    if (valorBusqueda !== '') {
-        params.append('valor_filtro', valorBusqueda);
-    } else if (tipoBusqueda === 'prioridad_alta') {
-        // No se necesita valor_filtro si el tipo ya especifica la prioridad alta
-        // params.append('valor_filtro', 'alta'); // O podríamos pasar un valor específico si el backend lo espera
-    }
+    params.append('valor_filtro', valorBusqueda);
 
+    // Construir la URL para la petición fetch
+    const url = `../php/ajax_buscar_incidencias.php?${params.toString()}`;
 
-    // Si ya existen otros parámetros en la URL (que no sean los nuestros), los conservamos
-    const currentParams = new URLSearchParams(window.location.search);
-    currentParams.forEach((value, key) => {
-        if (key !== 'tipo_filtro' && key !== 'valor_filtro') {
-            params.append(key, value);
-        }
-    });
+    // Guardar los parámetros de búsqueda actuales en la URL del navegador para persistencia (opcional)
+    // Esto actualiza la URL sin recargar la página. Si el usuario recarga manualmente, se aplicarán los filtros.
+    const newUrl = `${window.location.pathname}?${params.toString()}`;
+    window.history.pushState({path: newUrl}, '', newUrl);
 
-    window.location.search = params.toString();
+    fetch(url)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Error HTTP: ${response.status}`);
+            }
+            return response.text(); // Esperamos HTML como texto
+        })
+        .then(html => {
+            const tablaBody = document.querySelector('table tbody'); // Asumiendo una sola tabla en la página
+            if (tablaBody) {
+                tablaBody.innerHTML = html;
+            } else {
+                console.error('No se encontró el tbody de la tabla para actualizar.');
+            }
+        })
+        .catch(error => {
+            console.error('Error en la petición fetch:', error);
+            const tablaBody = document.querySelector('table tbody');
+            if (tablaBody) {
+                tablaBody.innerHTML = '<tr><td colspan="9" style="text-align:center; color:red;">Error al cargar los datos. Por favor, intente de nuevo.</td></tr>';
+            }
+        });
 }
 
 

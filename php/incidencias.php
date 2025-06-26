@@ -181,13 +181,14 @@ if (isset($_GET['tipo_filtro']) && !empty($_GET['tipo_filtro'])) {
         $condiciones[] = "c.dni = ?";
         $tipos_param .= "s";
         $valores_param[] = $_GET['valor_filtro'];
-    } elseif ($tipo_filtro === 'prioridad_alta') {
-        // Asumiendo que la descripción de la prioridad alta es 'Alta'.
-        // Esto debería confirmarse con la estructura de la tabla `prioridad`.
-        // Si es un ID, sería algo como p.id_prioridad = 1 (o el ID correspondiente)
-        $condiciones[] = "p.descripcion = ?";
+    } elseif ($tipo_filtro === 'prioridad' && isset($_GET['valor_filtro']) && !empty($_GET['valor_filtro'])) {
+        // Buscar por descripción de prioridad (ej. 'Alta', 'Media', 'Baja')
+        $condiciones[] = "p.descripcion LIKE ?";
         $tipos_param .= "s";
-        $valores_param[] = "Alta"; // O el valor que corresponda a prioridad alta
+        // Usamos el comodín % para búsquedas parciales si se desea, o tal cual para coincidencia exacta.
+        // Por ahora, asumiremos coincidencia exacta o que el usuario escribe el término completo.
+        // Si se quisiera más flexibilidad, se podría usar: $valores_param[] = "%" . $_GET['valor_filtro'] . "%";
+        $valores_param[] = $_GET['valor_filtro'];
     }
 }
 

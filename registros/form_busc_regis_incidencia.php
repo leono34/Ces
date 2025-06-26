@@ -24,7 +24,7 @@ include '../php/incidencias.php';
                     <select  class="form-select" id="tipo_busqueda_incidencia" aria-label="Tipo de búsqueda">
                         <option selected value="">Tipo de búsqueda</option>
                         <option value="dni_cliente">Por Dni Cliente</option>
-                        <option value="prioridad_alta">Por Prioridad Alta</option>
+                        <option value="prioridad">Por Prioridad</option>
                     </select>
                 </div>
                 <div class="col-md-8">
