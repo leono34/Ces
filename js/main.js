@@ -18,8 +18,7 @@ document.addEventListener('DOMContentLoaded', function () {
             parent.classList.toggle('active');
         });
     });
-
-    document.querySelectorAll('.cargar-contenido').forEach(link => {
+document.querySelectorAll('.cargar-contenido').forEach(link => {
     link.addEventListener('click', function () {
         const url = this.getAttribute('data-url');
         fetch(url)
@@ -29,17 +28,18 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (contenido) {
                     contenido.innerHTML = html;
 
-                    // Si es dashboard.php, volver a cargar los gráficos
-                    if (url.includes('dashboard.php')) {
+                    // ✅ Si es dashboard, cargar gráficos
+                    if (url.includes("dashboard.php")) {
                         setTimeout(() => {
-                            cargarGraficosDashboard(); // <- esta es la nueva función
-                        }, 200); // Espera ligera para asegurar que el DOM cargue
+                            cargarGraficosDashboard();
+                        }, 200); // Espera pequeña para que los canvas se inserten en el DOM
                     }
                 }
             })
             .catch(err => console.error('Error al cargar el contenido:', err));
     });
 });
+
 
 });
 
@@ -142,7 +142,7 @@ document.addEventListener('click', function(event) {
 });
 
 
-// codigo del dashboard.js
+// codigo del dashboard
 
 document.addEventListener("DOMContentLoaded", () => {
   fetch("../registros/data_dashboard.php")
@@ -243,3 +243,95 @@ document.addEventListener("DOMContentLoaded", () => {
       console.error("Error al obtener los datos del dashboard:", err);
     });
 });
+
+
+
+function cargarGraficosDashboard() {
+    fetch("../registros/data_dashboard.php")
+        .then(res => res.json())
+        .then(data => {
+            if (data.error) return console.error("Error desde el backend:", data.error);
+
+            document.getElementById("totalIncidencias").textContent = data.total_incidencias;
+            document.getElementById("totalClientes").textContent = data.total_clientes;
+            document.getElementById("incidenciasPendientes").textContent = data.incidencias_pendientes;
+            document.getElementById("incidenciasFinalizadas").textContent = data.incidencias_finalizadas;
+            document.getElementById("prioridadAlta").textContent = data.prioridad.alta;
+            document.getElementById("prioridadMedia").textContent = data.prioridad.media;
+            document.getElementById("prioridadBaja").textContent = data.prioridad.baja;
+
+            const monthlyCtx = document.getElementById("monthlyChart")?.getContext("2d");
+            if (monthlyCtx) {
+                new Chart(monthlyCtx, {
+                    type: "bar",
+                    data: {
+                        labels: data.meses,
+                        datasets: [{
+                            data: data.datos_mes,
+                            backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                            borderColor: 'rgba(255, 255, 255, 1)',
+                            borderWidth: 2,
+                            borderRadius: 8,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: { color: 'rgba(255, 255, 255, 0.8)' },
+                                grid: { color: 'rgba(255, 255, 255, 0.2)' }
+                            },
+                            x: {
+                                ticks: { color: 'rgba(255, 255, 255, 0.8)' },
+                                grid: { display: false }
+                            }
+                        }
+                    }
+                });
+            }
+
+            const statusCtx = document.getElementById("statusChart")?.getContext("2d");
+            if (statusCtx) {
+                new Chart(statusCtx, {
+                    type: "line",
+                    data: {
+                        labels: data.estados,
+                        datasets: [{
+                            data: data.datos_estados,
+                            borderColor: 'rgba(255, 255, 255, 1)',
+                            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.4,
+                            pointBackgroundColor: 'rgba(255, 255, 255, 1)',
+                            pointBorderColor: 'rgba(255, 255, 255, 1)',
+                            pointRadius: 6,
+                            pointHoverRadius: 8,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: { color: 'rgba(255, 255, 255, 0.8)' },
+                                grid: { color: 'rgba(255, 255, 255, 0.2)' }
+                            },
+                            x: {
+                                ticks: { color: 'rgba(255, 255, 255, 0.8)' },
+                                grid: { color: 'rgba(255, 255, 255, 0.2)' }
+                            }
+                        }
+                    }
+                });
+            }
+        })
+        .catch(err => {
+            console.error("Error al cargar datos del dashboard:", err);
+        });
+}

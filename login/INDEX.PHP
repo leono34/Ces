@@ -175,28 +175,19 @@ if (isset($_SESSION['error']) && $_SESSION['error'] == 'duplicado') {
 }
 ?>
 <script>
+document.addEventListener('DOMContentLoaded', () => {
     fetch('../registros/dashboard.php')
-  .then(res => res.text())
-  .then(html => {
-    const contenedor = document.getElementById('contenido-dinamico');
-    contenedor.innerHTML = html;
+        .then(res => res.text())
+        .then(html => {
+            const contenido = document.getElementById('contenido-dinamico');
+            contenido.innerHTML = html;
 
-    // Ejecutar scripts embebidos
-    const scripts = contenedor.querySelectorAll('script');
-    scripts.forEach(oldScript => {
-      const newScript = document.createElement('script');
-      if (oldScript.src) {
-        newScript.src = oldScript.src;
-        newScript.async = false; // Importante para mantener el orden
-        document.body.appendChild(newScript);
-        console.log("script externo cargado:", oldScript.src);
-      } else {
-        newScript.textContent = oldScript.textContent;
-        document.body.appendChild(newScript);
-        console.log("script inline ejecutado");
-      }
-    });
-  });
+            // ✅ Llama a los gráficos después de que el HTML esté listo
+            setTimeout(() => {
+                cargarGraficosDashboard();
+            }, 200);
+        });
+});
 
 </script>
 </body>
