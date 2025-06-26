@@ -182,7 +182,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const contenido = document.getElementById('contenido-dinamico');
             contenido.innerHTML = html;
 
-            // ✅ Llama a los gráficos después de que el HTML esté listo
+            //  Llama a los gráficos después de que el HTML esté listo
             setTimeout(() => {
                 cargarGraficosDashboard();
             }, 200);

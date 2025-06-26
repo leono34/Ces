@@ -46,8 +46,8 @@ include '../php/incidencias.php';
                 <th>Descripcion</th>
                 <th>Prioridad</th>
                 <th>Estado</th>
-                <th>Fecha_inicio</th>
-                <th>Fecha_fin</th>
+                <th>Fecha inicio</th>
+                <th>Fecha fin</th>
                 <th>Archivo</th>
                 <th>Acciones</th>
             </tr>
@@ -71,10 +71,7 @@ include '../php/incidencias.php';
                 <td class="acciones">
 
                     <button class="btn-editar" onclick="abrirModal('modalEditar<?= $row["id_incidencia"] ?>')"><i class="fas fa-edit"></i> Editar</button>           
-                    <!-- <a href="/phpmyadmin/PROGRAMACION/php/incidencias.php?eliminar=<?= $row[
-                    "id_incidencia"] ?>" onclick="return confirm('¿Eliminar esta incidencia?')">
-                        <button class="btn-eliminar"><i class="fas fa-trash-alt"></i> Eliminar</button>
-                    </a> -->
+   
 
                     <form method="get" action="/programacion/php/incidencias.php" onsubmit="return confirm('¿Eliminar esta incidencia?')">
                         <input type="hidden" name="eliminar" value="<?= $row["id_incidencia"] ?>">
@@ -107,7 +104,7 @@ include '../php/incidencias.php';
             
                     <div class="form-group">
                          <label for="">Cliente:</label>
-      <select name="id_cliente" id="id_cliente">
+                <select name="id_cliente" id="id_cliente">
                 <option value="">-- Seleccione --</option>
                 <?php
                 // Consulta
@@ -179,8 +176,6 @@ include '../php/incidencias.php';
                         } else {
                             echo '<option value="">No hay estados disponibles</option>';
                         }
-                        // Es buena práctica resetear el puntero del resultado si se va a usar de nuevo, aunque aquí no es estrictamente necesario.
-                        // if ($result_estados_modal) $result_estados_modal->data_seek(0);
                         ?>
                     </select>
                 </div>

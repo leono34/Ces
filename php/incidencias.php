@@ -127,7 +127,7 @@ if (isset($_POST["editar"])) {
         $_POST["titulo"],
         $_POST["descripcion"],
         $_POST["id_prioridad"],
-        $_POST["id_estado"], // Nuevo campo
+        $_POST["id_estado"],
         $_POST["fecha_inicio"],
         $_POST["fecha_fin"],
         $archivo,
