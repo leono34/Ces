@@ -142,7 +142,78 @@ document.addEventListener('click', function(event) {
     if (event.target && event.target.id === 'btnBuscarIncidencia') { // Para búsqueda de incidencias
         buscarIncidencias();
     }
+    if (event.target && event.target.id === 'btnBuscarSeguimiento') { // Para búsqueda de seguimientos
+        buscarSeguimientos(); // Por defecto, no limpia filtros
+    }
+    if (event.target && event.target.id === 'btnLimpiarFiltroSeguimiento') { // Para limpiar filtros de seguimientos
+        buscarSeguimientos(true); // Indica que se deben limpiar los filtros
+    }
 });
+
+function buscarSeguimientos(limpiarFiltros = false) {
+    const tipoBusquedaElement = document.getElementById('tipo_busqueda_seguimiento');
+    const valorBusquedaElement = document.getElementById('valor_busqueda_seguimiento');
+    const tablaBody = document.querySelector('#tablaSeguimientos tbody'); // Asumiendo que la tabla tiene id="tablaSeguimientos"
+
+    if (!tablaBody) {
+        console.error('No se encontró el tbody de la tabla de seguimientos (#tablaSeguimientos tbody).');
+        // Podrías intentar con un selector más genérico si la tabla no tiene ID,
+        // pero es menos robusto: const tablaBody = document.querySelector('table tbody');
+        // alert('Error: Tabla de seguimiento no encontrada.');
+        return;
+    }
+
+    let params = new URLSearchParams();
+    let tipoBusqueda = '';
+    let valorBusqueda = '';
+
+    if (!limpiarFiltros) {
+        if (!tipoBusquedaElement || !valorBusquedaElement) {
+            console.error("Elementos de búsqueda de seguimiento no encontrados en el DOM.");
+            return;
+        }
+        tipoBusqueda = tipoBusquedaElement.value;
+        valorBusqueda = valorBusquedaElement.value.trim();
+
+        if (tipoBusqueda && valorBusqueda === '') {
+            alert('Por favor, ingrese un valor para la búsqueda.');
+            return;
+        }
+        if (!tipoBusqueda && valorBusqueda !== '') {
+            alert('Por favor, seleccione un tipo de búsqueda.');
+            return;
+        }
+        if (tipoBusqueda) { // Solo añadir parámetros si hay un tipo de búsqueda
+            params.append('tipo_filtro', tipoBusqueda);
+            params.append('valor_filtro', valorBusqueda);
+        }
+    }
+    // Si limpiarFiltros es true, params se queda vacío, y el backend debería devolver todos los seguimientos.
+
+    const urlBase = '../php/ajax_buscar_seguimientos.php';
+    const queryString = params.toString();
+    const fetchUrl = queryString ? `${urlBase}?${queryString}` : urlBase;
+
+    // Actualizar URL del navegador
+    const newBrowserUrl = queryString ? `${window.location.pathname}?${queryString}` : window.location.pathname;
+    window.history.pushState({ path: newBrowserUrl }, '', newBrowserUrl);
+
+    fetch(fetchUrl)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Error HTTP: ${response.status}`);
+            }
+            return response.text();
+        })
+        .then(html => {
+            tablaBody.innerHTML = html;
+        })
+        .catch(error => {
+            console.error('Error en la petición fetch para seguimientos:', error);
+            tablaBody.innerHTML = '<tr><td colspan="11" style="text-align:center; color:red;">Error al cargar los datos de seguimiento.</td></tr>';
+        });
+}
+
 
 function buscarIncidencias() {
     const tipoBusquedaElement = document.getElementById('tipo_busqueda_incidencia');

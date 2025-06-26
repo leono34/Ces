@@ -185,9 +185,14 @@ if (isset($_GET['tipo_filtro']) && !empty($_GET['tipo_filtro'])) {
         // Buscar por descripción de prioridad (ej. 'Alta', 'Media', 'Baja')
         $condiciones[] = "p.descripcion LIKE ?";
         $tipos_param .= "s";
-        // Usamos el comodín % para búsquedas parciales si se desea, o tal cual para coincidencia exacta.
-        // Por ahora, asumiremos coincidencia exacta o que el usuario escribe el término completo.
-        // Si se quisiera más flexibilidad, se podría usar: $valores_param[] = "%" . $_GET['valor_filtro'] . "%";
+        $valores_param[] = $_GET['valor_filtro'];
+    } elseif ($tipo_filtro === 'prioridad_incidencia' && isset($_GET['valor_filtro']) && !empty($_GET['valor_filtro'])) { // Para carga inicial de seguimientos
+        $condiciones[] = "p.descripcion LIKE ?";
+        $tipos_param .= "s";
+        $valores_param[] = $_GET['valor_filtro'];
+    } elseif ($tipo_filtro === 'estado_incidencia' && isset($_GET['valor_filtro']) && !empty($_GET['valor_filtro'])) { // Para carga inicial de seguimientos
+        $condiciones[] = "e.nombre_estado LIKE ?";
+        $tipos_param .= "s";
         $valores_param[] = $_GET['valor_filtro'];
     }
 }

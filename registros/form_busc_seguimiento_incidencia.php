@@ -21,24 +21,26 @@
     <div class="buscar-container">
             <div class="row g-2 mb-2">
                 <div class="col-md-4">
-                    <select  class="form-select" id="tipo_busqueda" aria-label="Tipo de búsqueda">
-                        <option selected>Tipo de búsqueda</option>
-                        <option value="dni">Por Dni</option>
-                        <option value="correo">Por Prioridad</option>
+                    <select  class="form-select" id="tipo_busqueda_seguimiento" aria-label="Tipo de búsqueda">
+                        <option selected value="">Tipo de búsqueda</option>
+                        <option value="dni_cliente">Por Dni Cliente</option>
+                        <option value="prioridad_incidencia">Por Prioridad Incidencia</option>
+                        <option value="estado_incidencia">Por Estado Incidencia</option>
                     </select>
                 </div>
                 <div class="col-md-8">
-                    <input type="text" id="valor_busqueda" placeholder="Ingrese valor de búsqueda">
+                    <input type="text" id="valor_busqueda_seguimiento" placeholder="Ingrese valor de búsqueda">
                 </div>
             </div>
-            <div class="d-grid mb-3">
-                <button  id="btnBuscar" class="btn btn-success fw-bold" type="button">BUSCAR</button>
+            <div class="d-grid gap-2 d-md-flex justify-content-md-start mb-3">
+                <button  id="btnBuscarSeguimiento" class="btn btn-success fw-bold" type="button">BUSCAR</button>
+                <button  id="btnLimpiarFiltroSeguimiento" class="btn btn-secondary fw-bold" type="button">Limpiar Filtros</button>
             </div>
     </div>
   
    <h2>Asignadas por mi</h2> <br>
  <!-- <button class="btn-nuevo" onclick="abrirModal('modalInsertar')"> <i class="fas fa-plus"></i> Nueva Incidencia</button>-->
-    <table>
+    <table id="tablaSeguimientos">
         <thead>
             <tr>
                 <th>Cliente</th>
