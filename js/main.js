@@ -244,8 +244,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 });
 
-
-
 function cargarGraficosDashboard() {
     fetch("../registros/data_dashboard.php")
         .then(res => res.json())
