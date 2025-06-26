@@ -136,10 +136,54 @@ function limpiarCampos() {
 }
 // Este reemplaza al anterior DOMContentLoaded
 document.addEventListener('click', function(event) {
-    if (event.target && event.target.id === 'btnBuscar') {
+    if (event.target && event.target.id === 'btnBuscar') { // Para búsqueda de clientes en otras páginas
         buscarCliente();
     }
+    if (event.target && event.target.id === 'btnBuscarIncidencia') { // Para búsqueda de incidencias
+        buscarIncidencias();
+    }
 });
+
+function buscarIncidencias() {
+    const tipoBusqueda = document.getElementById('tipo_busqueda_incidencia').value;
+    const valorBusqueda = document.getElementById('valor_busqueda').value.trim();
+
+    if (!tipoBusqueda) {
+        alert('Por favor, seleccione un tipo de búsqueda.');
+        return;
+    }
+
+    if (tipoBusqueda === 'dni_cliente' && valorBusqueda === '') {
+        alert('Por favor, ingrese un DNI para buscar.');
+        return;
+    }
+
+    // Si es prioridad_alta, no necesitamos valor de búsqueda adicional por ahora,
+    // pero podríamos quererlo si el input 'valor_busqueda' se usara para otras prioridades.
+
+    let url = window.location.pathname; // Obtiene la URL actual sin parámetros
+    const params = new URLSearchParams();
+
+    params.append('tipo_filtro', tipoBusqueda);
+    if (valorBusqueda !== '') {
+        params.append('valor_filtro', valorBusqueda);
+    } else if (tipoBusqueda === 'prioridad_alta') {
+        // No se necesita valor_filtro si el tipo ya especifica la prioridad alta
+        // params.append('valor_filtro', 'alta'); // O podríamos pasar un valor específico si el backend lo espera
+    }
+
+
+    // Si ya existen otros parámetros en la URL (que no sean los nuestros), los conservamos
+    const currentParams = new URLSearchParams(window.location.search);
+    currentParams.forEach((value, key) => {
+        if (key !== 'tipo_filtro' && key !== 'valor_filtro') {
+            params.append(key, value);
+        }
+    });
+
+    window.location.search = params.toString();
+}
+
 
 
 // codigo del dashboard

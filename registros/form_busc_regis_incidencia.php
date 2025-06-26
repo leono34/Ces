@@ -21,10 +21,10 @@ include '../php/incidencias.php';
     <div class="buscar-container">
             <div class="row g-2 mb-2">
                 <div class="col-md-4">
-                    <select  class="form-select" id="tipo_busqueda" aria-label="Tipo de búsqueda">
-                        <option selected>Tipo de búsqueda</option>
-                        <option value="dni">Por Dni</option>
-                        <option value="correo">Por Prioridad</option>
+                    <select  class="form-select" id="tipo_busqueda_incidencia" aria-label="Tipo de búsqueda">
+                        <option selected value="">Tipo de búsqueda</option>
+                        <option value="dni_cliente">Por Dni Cliente</option>
+                        <option value="prioridad_alta">Por Prioridad Alta</option>
                     </select>
                 </div>
                 <div class="col-md-8">
@@ -32,7 +32,7 @@ include '../php/incidencias.php';
                 </div>
             </div>
             <div class="d-grid mb-3">
-                <button  id="btnBuscar" class="btn btn-success fw-bold" type="button">BUSCAR</button>
+                <button  id="btnBuscarIncidencia" class="btn btn-success fw-bold" type="button">BUSCAR</button>
             </div>
     </div>
 
@@ -45,6 +45,7 @@ include '../php/incidencias.php';
                 <th>Titulo</th>
                 <th>Descripcion</th>
                 <th>Prioridad</th>
+                <th>Estado</th>
                 <th>Fecha_inicio</th>
                 <th>Fecha_fin</th>
                 <th>Archivo</th>
@@ -58,6 +59,7 @@ include '../php/incidencias.php';
                 <td><?= $row["titulo"] ?></td>
                 <td><?= $row["descripcion"] ?></td>
                 <td><?= $row["nombre_prioridad"] ?></td>
+                <td><?= htmlspecialchars($row["nombre_estado"]) ?></td>
                 <td><?= $row["fecha_inicio"] ?></td>
                 <td><?= $row["fecha_fin"] ?></td>
                  
@@ -155,9 +157,34 @@ include '../php/incidencias.php';
 
               }
           } else {
-              echo '<option value="">No hay estados</option>';
+              echo '<option value="">No hay prioridades</option>'; // Corregido el mensaje
           } ?>
             </select></div>
+
+                <div class="form-group">
+                    <label for="id_estado_<?= $row['id_incidencia'] ?>">Estado:</label>
+                    <select name="id_estado" id="id_estado_<?= $row['id_incidencia'] ?>">
+                        <option value="">-- Seleccione Estado --</option>
+                        <?php
+                        // Consulta para obtener todos los estados
+                        $sql_estados = "SELECT id_estado, nombre_estado FROM estados_reclamos;";
+                        $result_estados_modal = $conn->query($sql_estados);
+                        if ($result_estados_modal && $result_estados_modal->num_rows > 0) {
+                            while ($row_estado_modal = $result_estados_modal->fetch_assoc()) {
+                                $selected_estado = ($row["id_estado"] == $row_estado_modal["id_estado"]) ? ' selected' : '';
+                                echo '<option value="' . htmlspecialchars($row_estado_modal["id_estado"]) . '"' . $selected_estado . '>' .
+                                     htmlspecialchars($row_estado_modal["nombre_estado"]) .
+                                     '</option>';
+                            }
+                        } else {
+                            echo '<option value="">No hay estados disponibles</option>';
+                        }
+                        // Es buena práctica resetear el puntero del resultado si se va a usar de nuevo, aunque aquí no es estrictamente necesario.
+                        // if ($result_estados_modal) $result_estados_modal->data_seek(0);
+                        ?>
+                    </select>
+                </div>
+
                 <div class="form-group">
                     <label>Fecha Inicio:</label>
                     <input type="date" name="fecha_inicio" value="<?= htmlspecialchars($row['fecha_inicio']) ?>" required>

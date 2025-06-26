@@ -114,7 +114,7 @@ if (isset($_POST["editar"])) {
     }
 
     $stmt = $conn->prepare(
-        "UPDATE incidencia SET id_cliente=?, titulo=?, descripcion=?, id_prioridad=?, fecha_inicio=?, fecha_fin=?, archivo=? WHERE id_incidencia=?"
+        "UPDATE incidencia SET id_cliente=?, titulo=?, descripcion=?, id_prioridad=?, id_estado=?, fecha_inicio=?, fecha_fin=?, archivo=? WHERE id_incidencia=?"
     );
 
     if (!$stmt) {
@@ -122,11 +122,12 @@ if (isset($_POST["editar"])) {
     }
 
     $stmt->bind_param(
-        "sssssssi",
+        "ssssisssi", // Se añadió 'i' para id_estado
         $_POST["id_cliente"],
         $_POST["titulo"],
         $_POST["descripcion"],
         $_POST["id_prioridad"],
+        $_POST["id_estado"], // Nuevo campo
         $_POST["fecha_inicio"],
         $_POST["fecha_fin"],
         $archivo,
@@ -162,12 +163,54 @@ if (isset($_GET["eliminar"])) {
 }
 
 
-$sql = "SELECT i.*, e.nombre_estado , CONCAT_WS(' ', c.nombres, c.apellido_paterno, c.apellido_materno) AS nombre_cliente,
-    p.descripcion AS nombre_prioridad FROM incidencia i JOIN clientes c ON i.id_cliente = c.id_cliente JOIN 
-    prioridad p ON i.id_prioridad = p.id_prioridad JOIN estados_reclamos e ON i.id_estado = e.id_estado ORDER BY i.id_incidencia
-    ";
+$sql_base = "SELECT i.*, e.nombre_estado , CONCAT_WS(' ', c.nombres, c.apellido_paterno, c.apellido_materno) AS nombre_cliente,
+    p.descripcion AS nombre_prioridad
+    FROM incidencia i
+    JOIN clientes c ON i.id_cliente = c.id_cliente
+    JOIN prioridad p ON i.id_prioridad = p.id_prioridad
+    JOIN estados_reclamos e ON i.id_estado = e.id_estado";
 
-$result_lista = $conn->query($sql);
+$condiciones = [];
+$tipos_param = "";
+$valores_param = [];
+
+if (isset($_GET['tipo_filtro']) && !empty($_GET['tipo_filtro'])) {
+    $tipo_filtro = $_GET['tipo_filtro'];
+
+    if ($tipo_filtro === 'dni_cliente' && isset($_GET['valor_filtro']) && !empty($_GET['valor_filtro'])) {
+        $condiciones[] = "c.dni = ?";
+        $tipos_param .= "s";
+        $valores_param[] = $_GET['valor_filtro'];
+    } elseif ($tipo_filtro === 'prioridad_alta') {
+        // Asumiendo que la descripción de la prioridad alta es 'Alta'.
+        // Esto debería confirmarse con la estructura de la tabla `prioridad`.
+        // Si es un ID, sería algo como p.id_prioridad = 1 (o el ID correspondiente)
+        $condiciones[] = "p.descripcion = ?";
+        $tipos_param .= "s";
+        $valores_param[] = "Alta"; // O el valor que corresponda a prioridad alta
+    }
+}
+
+if (!empty($condiciones)) {
+    $sql_base .= " WHERE " . implode(" AND ", $condiciones);
+}
+
+$sql_base .= " ORDER BY i.id_incidencia";
+
+$stmt_lista = $conn->prepare($sql_base);
+
+if ($stmt_lista) {
+    if (!empty($valores_param)) {
+        $stmt_lista->bind_param($tipos_param, ...$valores_param);
+    }
+    $stmt_lista->execute();
+    $result_lista = $stmt_lista->get_result();
+} else {
+    // Manejo de error si la preparación de la consulta falla
+    die("Error al preparar la consulta de lista de incidencias: " . $conn->error);
+}
+
+// $result_lista = $conn->query($sql); // Línea original comentada o eliminada
 
 if (!$result_lista) {
     die("Error en la consulta: " . $conn->error);
