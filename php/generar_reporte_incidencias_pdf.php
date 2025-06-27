@@ -1,26 +1,27 @@
 <?php
+session_start(); // Añadido por si CONEXIONBD.php o futuras necesidades lo requieren
 // Incluir la librería FPDF
-// Asegúrate de que la ruta sea correcta respecto a la ubicación de este script.
-require('/lib/fpdf/fpdf.php');
+// Ajustado para la ruta relativa desde la carpeta php/
+require('lib/fpdf/fpdf.php');
 
-// Conexión a la base de datos
-$host = "localhost";
-$user = "root";
-$password = "";
-$database = "incidencias";
+// Conexión a la base de datos usando el script centralizado
+require('../login/CONEXIONBD.php');
+$conn = obtenerConexion();
 
-$conn = new mysqli($host, $user, $password, $database);
-
-if ($conn->connect_error) {
+if (!$conn) { // obtenerConexion podría devolver false o un objeto con error
     // En un caso real, podrías generar un PDF de error o simplemente morir.
-    die("Conexión fallida: " . $conn->connect_error);
+    // Para este ejemplo, si falla la conexión desde CONEXIONBD.php, morimos.
+    // Opcionalmente, crear un PDF de error como en el script original.
+    die("Conexión fallida desde CONEXIONBD.php");
 }
-$conn->set_charset("utf8mb4"); // Es buena idea establecer el charset
+// Es buena idea establecer el charset, CONEXIONBD.php debería manejar esto o permitirlo.
+// Si obtenerConexion() ya devuelve una conexión con charset, esto podría ser redundante o causar error.
+// $conn->set_charset("utf8mb4"); // Comentado temporalmente, verificar si es necesario con CONEXIONBD.php
 
-// Obtener filtros GET
-$tipo_filtro = $_GET['tipo_filtro'] ?? null;
-$valor_filtro = $_GET['valor_filtro'] ?? null;
-$filtro_aplicado_info = "Ninguno";
+// Obtener filtros GET (cambiados a tipo_busqueda y valor_busqueda)
+$tipo_busqueda = $_GET['tipo_busqueda'] ?? null;
+$valor_busqueda = $_GET['valor_busqueda'] ?? null;
+$filtro_aplicado_info = "Todos los registros"; // Mensaje por defecto
 
 // Consulta SQL base
 $sql_base = "SELECT i.id_incidencia,
@@ -38,33 +39,36 @@ $condiciones = [];
 $tipos_param = "";
 $valores_param = [];
 
-if ($tipo_filtro && $valor_filtro) {
-    switch ($tipo_filtro) {
+if ($tipo_busqueda && $valor_busqueda) {
+    switch ($tipo_busqueda) {
         case 'dni_cliente':
             $condiciones[] = "c.dni = ?";
             $tipos_param .= "s";
-            $valores_param[] = $valor_filtro;
-            $filtro_aplicado_info = "DNI Cliente: " . htmlspecialchars($valor_filtro);
+            $valores_param[] = $valor_busqueda;
+            $filtro_aplicado_info = "DNI Cliente: " . htmlspecialchars($valor_busqueda);
             break;
-        case 'prioridad': // Asumiendo que 'prioridad' es el value usado en form_busc_regis_incidencia
-            $condiciones[] = "p.descripcion LIKE ?";
-            $tipos_param .= "s";
-            $valores_param[] = $valor_filtro;
-            $filtro_aplicado_info = "Prioridad: " . htmlspecialchars($valor_filtro);
+        case 'prioridad':
+            // El script original usa LIKE, pero el valor no incluye '%'.
+            // Para mantener consistencia con la búsqueda en registrar_clien.php,
+            // que probablemente espera una coincidencia exacta o que el usuario use %,
+            // se podría cambiar a '=' si el valor_busqueda es un ID o un nombre exacto,
+            // o mantener LIKE y asegurar que el valor_busqueda sea apropiado.
+            // Por ahora, se mantiene LIKE como en el script original.
+            $condiciones[] = "p.descripcion LIKE ?"; // O p.id_prioridad = ? si valor_busqueda es el ID
+            $tipos_param .= "s"; // Cambiar a 'i' si es por ID
+            $valores_param[] = '%' . $valor_busqueda . '%'; // Asumiendo que se busca parte del texto
+            $filtro_aplicado_info = "Prioridad: " . htmlspecialchars($valor_busqueda);
             break;
-        case 'estado_incidencia': // Si se implementa filtro por estado en UI de incidencias
-             $condiciones[] = "e.nombre_estado LIKE ?";
-             $tipos_param .= "s";
-             $valores_param[] = $valor_filtro;
-             $filtro_aplicado_info = "Estado: " . htmlspecialchars($valor_filtro);
-            break;
+        // Considerar si se necesita filtro por 'estado_incidencia' aquí también.
+        // case 'estado_incidencia':
+        //      $condiciones[] = "e.nombre_estado LIKE ?";
+        //      $tipos_param .= "s";
+        //      $valores_param[] = '%' . $valor_busqueda . '%';
+        //      $filtro_aplicado_info = "Estado: " . htmlspecialchars($valor_busqueda);
+        //     break;
     }
-} elseif ($tipo_filtro && !$valor_filtro) {
-    // Si se pasa un tipo de filtro pero no un valor, y el filtro requiere un valor,
-    // decidimos no aplicar el filtro para el reporte para evitar errores o resultados inesperados.
-    // O podrías decidir generar un error o un reporte vacío con un mensaje.
-    // Por ahora, se listarán todos si el valor falta para un filtro que lo necesita.
-    $filtro_aplicado_info = "Filtro '".htmlspecialchars($tipo_filtro)."' sin valor especificado - mostrando todos.";
+} elseif ($tipo_busqueda && !$valor_busqueda) {
+    $filtro_aplicado_info = "Tipo de búsqueda '".htmlspecialchars($tipo_busqueda)."' especificado, pero sin valor. Mostrando todos los registros.";
 }
 
 

@@ -33,6 +33,7 @@ include '../php/incidencias.php';
             </div>
             <div class="d-grid gap-2 d-md-flex justify-content-md-start mb-3">
                 <button  id="btnBuscarIncidencia" class="btn btn-success fw-bold" type="button">BUSCAR</button>
+                <button  id="btnGenerarReportePDF" class="btn btn-danger fw-bold" type="button">GENERAR REPORTE PDF</button>
             </div>
     </div>
 
@@ -264,4 +265,84 @@ include '../php/incidencias.php';
     </div>
 </div>
 
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const btnGenerarReportePDF = document.getElementById('btnGenerarReportePDF');
+    if (btnGenerarReportePDF) {
+        btnGenerarReportePDF.addEventListener('click', function() {
+            const tipoBusqueda = document.getElementById('tipo_busqueda_incidencia').value;
+            const valorBusqueda = document.getElementById('valor_busqueda').value;
+
+            let url = '../php/generar_reporte_incidencias_pdf.php';
+            const params = new URLSearchParams();
+
+            if (tipoBusqueda) {
+                params.append('tipo_busqueda', tipoBusqueda);
+            }
+            if (valorBusqueda) {
+                params.append('valor_busqueda', valorBusqueda);
+            }
+
+            if (params.toString()) {
+                url += '?' + params.toString();
+            }
+
+            window.open(url, '_blank');
+        });
+    }
+
+    // Script para la búsqueda existente (si es necesario adaptarlo o asegurarse de que no haya conflictos)
+    const btnBuscarIncidencia = document.getElementById('btnBuscarIncidencia');
+    if (btnBuscarIncidencia) {
+        btnBuscarIncidencia.addEventListener('click', function() {
+            const tipoBusqueda = document.getElementById('tipo_busqueda_incidencia').value;
+            const valorBusqueda = document.getElementById('valor_busqueda').value;
+
+            let queryParams = '';
+            if (tipoBusqueda && valorBusqueda) {
+                queryParams = `?tipo_busqueda_incidencia=${encodeURIComponent(tipoBusqueda)}&valor_busqueda_incidencia=${encodeURIComponent(valorBusqueda)}`;
+            } else if (tipoBusqueda) {
+                // Considerar si se debe permitir búsqueda solo por tipo o si valor es siempre requerido
+                 // Por ahora, asumimos que si hay tipo, debe haber valor, o ajustar la lógica según sea necesario
+            }
+
+            // Actualiza la URL de la página actual para realizar la búsqueda
+            window.location.href = `registrar_clien.php${queryParams}`;
+        });
+    }
+
+    function abrirModal(idModal) {
+        var modal = document.getElementById(idModal);
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    function cerrarModal(idModal) {
+        var modal = document.getElementById(idModal);
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Cerrar modal si se hace clic fuera de él
+    window.onclick = function(event) {
+        var modals = document.getElementsByClassName('modal');
+        for (var i = 0; i < modals.length; i++) {
+            if (event.target == modals[i]) {
+                modals[i].style.display = "none";
+            }
+        }
+    }
+
+    // Adjuntar eventos de cierre a todos los botones de cerrar modal
+    var closeButtons = document.querySelectorAll('.modal .close');
+    closeButtons.forEach(function(button) {
+        button.onclick = function() {
+            var modalId = button.closest('.modal').id;
+            cerrarModal(modalId);
+        }
+    });
+});
+</script>
 </body>
