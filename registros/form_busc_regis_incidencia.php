@@ -33,7 +33,6 @@ include '../php/incidencias.php';
             </div>
             <div class="d-grid gap-2 d-md-flex justify-content-md-start mb-3">
                 <button  id="btnBuscarIncidencia" class="btn btn-success fw-bold" type="button">BUSCAR</button>
-                <a id="btnGenerarReporteIncidencia" class="btn btn-info fw-bold" href="#" role="button">Generar Reporte PDF</a>
             </div>
     </div>
 
