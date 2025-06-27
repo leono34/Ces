@@ -120,8 +120,8 @@ while($row = $resEstados->fetch_assoc()) {
                     </a>
                     <ul class="submenu">
                         <li><a href="javascript:void(0);" class="cargar-contenido" data-url="../registros/form_busc_regis_incidencia.php">Registrar</a></li>
-                        <!-- href="../registros/registrar_clien.php" -->
-                        <li><a >Reportes - Proximamente</a></li>
+                       
+                        <li><a href="../registros/registrar_clien.php" >Reportes</a></li>
                     </ul>
                 </li>
 

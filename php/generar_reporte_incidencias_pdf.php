@@ -1,7 +1,7 @@
 <?php
 // Incluir la librería FPDF
 // Asegúrate de que la ruta sea correcta respecto a la ubicación de este script.
-require('lib/fpdf/fpdf.php');
+require('/lib/fpdf/fpdf.php');
 
 // Conexión a la base de datos
 $host = "localhost";
