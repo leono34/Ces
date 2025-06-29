@@ -39,7 +39,6 @@
     </div>
   
    <h2>Asignadas por mi</h2> <br>
- <!-- <button class="btn-nuevo" onclick="abrirModal('modalInsertar')"> <i class="fas fa-plus"></i> Nueva Incidencia</button>-->
     <table id="tablaSeguimientos">
         <thead>
             <tr>
@@ -49,7 +48,6 @@
                 <th>prioridad</th>
                 <th>fecha_inicio</th>
                 <th>fecha_fin</th>
-                <th>archivo</th>
                 <th>Estado</th>
                 <th>comentario</th>
                 <th>dias</th>
@@ -73,7 +71,6 @@
                 <td><?= $row["nombre_prioridad"] ?></td>
                 <td><?= $row["fecha_inicio"] ?></td>
                 <td><?= $row["fecha_fin"] ?></td>
-                <td><?= $row["archivo"] ?></td>
                 <td><?= $row["nombre_estado"] ?></td>
                 <td><?= $row["comentarios"] ?></td>
                 <td><?= $dias?></td><!-- Mostramos los días calculados -->
@@ -83,15 +80,6 @@
                                 ] ?>')">
                     <i class="fas fa-eye"></i> Ver
                 </button>
-                    <!--<button class="btn-editar" onclick="abrirModal('modalEditar<?= $row[
-                    "id_incidencia"
-                ] ?>')"><i class="fas fa-edit"></i>Editar</button>
-                    <a href="/phpmyadmin/PROGRAMACION/php/incidencias.php?eliminar=<?= $row[
-                    "id_incidencia"
-                ] ?>" onclick="return confirm('¿Eliminar esta incidencia?')">
-                        <button class="btn-eliminar"><i class="fas fa-trash-alt"></i> Eliminar</button>
-                    </a>-->
-
                 </td>
             </tr>
             <?php endwhile; ?>
