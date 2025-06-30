@@ -1,4 +1,5 @@
 <?php
+
 session_start(); // Añadido por si CONEXIONBD.php o futuras necesidades lo requieren
 // Incluir la librería FPDF
 // Ajustado para la ruta relativa desde la carpeta php/
@@ -8,19 +9,14 @@ require('lib/fpdf/fpdf.php');
 require('../login/CONEXIONBD.php');
 $conn = obtenerConexion();
 
-if (!$conn) { // obtenerConexion podría devolver false o un objeto con error
-    // En un caso real, podrías generar un PDF de error o simplemente morir.
-    // Para este ejemplo, si falla la conexión desde CONEXIONBD.php, morimos.
-    // Opcionalmente, crear un PDF de error como en el script original.
+if (!$conn) { 
     die("Conexión fallida desde CONEXIONBD.php");
 }
-// Es buena idea establecer el charset, CONEXIONBD.php debería manejar esto o permitirlo.
-// Si obtenerConexion() ya devuelve una conexión con charset, esto podría ser redundante o causar error.
-// $conn->set_charset("utf8mb4"); // Comentado temporalmente, verificar si es necesario con CONEXIONBD.php
 
 // Obtener filtros GET (cambiados a tipo_busqueda y valor_busqueda)
-$tipo_busqueda = $_GET['tipo_busqueda'] ?? null;
-$valor_busqueda = $_GET['valor_busqueda'] ?? null;
+$tipo_busqueda = $_GET['tipo_busqueda'] ?? $_GET['tipo_filtro'] ?? null;
+$valor_busqueda = $_GET['valor_busqueda'] ?? $_GET['valor_filtro'] ?? null;
+
 $filtro_aplicado_info = "Todos los registros"; // Mensaje por defecto
 
 // Consulta SQL base
@@ -48,24 +44,11 @@ if ($tipo_busqueda && $valor_busqueda) {
             $filtro_aplicado_info = "DNI Cliente: " . htmlspecialchars($valor_busqueda);
             break;
         case 'prioridad':
-            // El script original usa LIKE, pero el valor no incluye '%'.
-            // Para mantener consistencia con la búsqueda en registrar_clien.php,
-            // que probablemente espera una coincidencia exacta o que el usuario use %,
-            // se podría cambiar a '=' si el valor_busqueda es un ID o un nombre exacto,
-            // o mantener LIKE y asegurar que el valor_busqueda sea apropiado.
-            // Por ahora, se mantiene LIKE como en el script original.
             $condiciones[] = "p.descripcion LIKE ?"; // O p.id_prioridad = ? si valor_busqueda es el ID
             $tipos_param .= "s"; // Cambiar a 'i' si es por ID
             $valores_param[] = '%' . $valor_busqueda . '%'; // Asumiendo que se busca parte del texto
             $filtro_aplicado_info = "Prioridad: " . htmlspecialchars($valor_busqueda);
             break;
-        // Considerar si se necesita filtro por 'estado_incidencia' aquí también.
-        // case 'estado_incidencia':
-        //      $condiciones[] = "e.nombre_estado LIKE ?";
-        //      $tipos_param .= "s";
-        //      $valores_param[] = '%' . $valor_busqueda . '%';
-        //      $filtro_aplicado_info = "Estado: " . htmlspecialchars($valor_busqueda);
-        //     break;
     }
 } elseif ($tipo_busqueda && !$valor_busqueda) {
     $filtro_aplicado_info = "Tipo de búsqueda '".htmlspecialchars($tipo_busqueda)."' especificado, pero sin valor. Mostrando todos los registros.";

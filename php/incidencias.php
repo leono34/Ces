@@ -26,6 +26,15 @@ $sql = "SELECT id_cliente, CONCAT_WS(' ', nombres, apellido_paterno, apellido_ma
 FROM clientes;";
 $result_cliente = $conn->query($sql);
 
+$sql_base = "SELECT i.*, e.nombre_estado , CONCAT_WS(' ', c.nombres, c.apellido_paterno, c.apellido_materno) AS nombre_cliente,
+    p.descripcion AS nombre_prioridad
+    FROM incidencia i
+    JOIN clientes c ON i.id_cliente = c.id_cliente
+    JOIN prioridad p ON i.id_prioridad = p.id_prioridad
+    JOIN estados_reclamos e ON i.id_estado = e.id_estado";
+$result_total= $conn->query($sql_base);
+
+
 if (isset($_POST["insertar"])) {
     //$nombre = $_POST['nombre'];
     $archivo = '';
@@ -87,8 +96,6 @@ if (isset($_POST["insertar"])) {
 
 // Actualizar o Editar los datos
 
-
-
 if (isset($_POST["editar"])) {
     $archivo = '';
 
@@ -113,6 +120,39 @@ if (isset($_POST["editar"])) {
         $stmtArchivo->close();
     }
 
+    // 2. Obtener estado anterior
+    $id_incidencia = $_POST["id_incidencia"];
+    $sqlEstado = "SELECT e.nombre_estado FROM incidencia i JOIN estados_reclamos e ON i.id_estado = e.id_estado WHERE i.id_incidencia = ?";
+    $stmt = $conn->prepare($sqlEstado);
+    $stmt->bind_param("i", $id_incidencia);
+    $stmt->execute();
+    $stmt->bind_result($estado_anterior);
+    $stmt->fetch();
+    $stmt->close();
+
+    // 3. Obtener nuevo estado
+    $id_estado_nuevo = $_POST["id_estado"];
+    $sqlNuevo = "SELECT nombre_estado FROM estados_reclamos WHERE id_estado = ?";
+    $stmtNuevo = $conn->prepare($sqlNuevo);
+    $stmtNuevo->bind_param("i", $id_estado_nuevo);
+    $stmtNuevo->execute();
+    $stmtNuevo->bind_result($estado_nuevo);
+    $stmtNuevo->fetch();
+    $stmtNuevo->close();
+
+        // 4. Guardar historial del seguimiento con comentario personalizado
+    $comentario = $_POST['comentario'] ?? '';
+    if (empty($comentario)) {
+        die("Comentario vacío no permitido.");
+    }
+
+    $sqlInsertHistorial = "INSERT INTO historial_seguimiento (id_incidencia, estado_anterior, estado_nuevo, comentario, fecha_hora)
+                            VALUES (?, ?, ?, ?, NOW())";
+    $stmtHist = $conn->prepare($sqlInsertHistorial);
+    $stmtHist->bind_param("isss", $id_incidencia, $estado_anterior, $estado_nuevo, $comentario);
+    $stmtHist->execute();
+    $stmtHist->close();
+
     $stmt = $conn->prepare(
         "UPDATE incidencia SET id_cliente=?, titulo=?, descripcion=?, id_prioridad=?, id_estado=?, fecha_inicio=?, fecha_fin=?, archivo=? WHERE id_incidencia=?"
     );
@@ -122,7 +162,7 @@ if (isset($_POST["editar"])) {
     }
 
     $stmt->bind_param(
-        "ssssisssi", // Se añadió 'i' para id_estado
+        "ssssisssi", 
         $_POST["id_cliente"],
         $_POST["titulo"],
         $_POST["descripcion"],
@@ -182,7 +222,6 @@ if (isset($_GET['tipo_filtro']) && !empty($_GET['tipo_filtro'])) {
         $tipos_param .= "s";
         $valores_param[] = $_GET['valor_filtro'];
     } elseif ($tipo_filtro === 'prioridad' && isset($_GET['valor_filtro']) && !empty($_GET['valor_filtro'])) {
-        // Buscar por descripción de prioridad (ej. 'Alta', 'Media', 'Baja')
         $condiciones[] = "p.descripcion LIKE ?";
         $tipos_param .= "s";
         $valores_param[] = $_GET['valor_filtro'];
@@ -201,7 +240,8 @@ if (!empty($condiciones)) {
     $sql_base .= " WHERE " . implode(" AND ", $condiciones);
 }
 
-$sql_base .= " ORDER BY i.id_incidencia";
+$sql_base .= " ORDER BY FIELD(e.nombre_estado, 'Ingresando', 'En Revisión', 'Anulado', 'Finalizado')";
+
 
 $stmt_lista = $conn->prepare($sql_base);
 

@@ -75,9 +75,7 @@
                 <td><?= $row["comentarios"] ?></td>
                 <td><?= $dias?></td><!-- Mostramos los días calculados -->
                 <td class="acciones">
-                <button class="btn-ver" onclick="abrirModal('modalEditar<?= $row[
-                                    "id_incidencia"
-                                ] ?>')">
+                <button class="btn-ver" onclick="abrirModal('modalEditar<?= $row["id_incidencia" ] ?>')">
                     <i class="fas fa-eye"></i> Ver
                 </button>
                 </td>
@@ -86,135 +84,134 @@
         </tbody>
     </table>
 
-    <?php while ($row = $result_lista_2->fetch_assoc()): ?>
-    <div id="modalEditar<?= $row['id_incidencia'] ?>" class="modal">
-        <div class="modal-contenido">
-            <span class="close" onclick="cerrarModal('modalEditar<?= $row['id_incidencia'] ?>')">&times;</span>
-            <div class="modal-header"><h2>Ver Seguimiento</h2></div>
+     <?php while ($row = $result_total->fetch_assoc()): ?>
+<div id="modalEditar<?= $row['id_incidencia'] ?>" class="modal">
+    <div class="modal-contenido" style="max-width: 800px; width: 90%;">
+        <span class="close" onclick="cerrarModal('modalEditar<?= $row['id_incidencia'] ?>')">&times;</span>
+        <div class="modal-header">
+            <h2>Comentarios y Estado</h2>
+        </div>
 
-            <!-- FORMULARIO -->
-            <form action="../php/seguimiento.php" method="post" enctype="multipart/form-data>">
+        <!-- Timeline Container -->
+        <div class="timeline-container">
+            <!-- Estado Actual -->
+            <div class="timeline-item">
+                <div class="timeline-icon status-icon">
+                    <i class="fas fa-info-circle"></i>
+                </div>
+                <div class="timeline-content">
+                    <div class="timeline-header">
+                        <span class="status-badge">Estado: <?= htmlspecialchars($row['nombre_estado']) ?></span>
+                        <span class="timeline-date"><?= date('d/m/Y H:i', strtotime($row['fecha_inicio'])) ?> PM</span>
+                    </div>
+                    <div class="timeline-details">
+                        <p><strong>Fecha ingreso de incidencia:</strong> <?= date('d/m/Y H:i', strtotime($row['fecha_inicio'])) ?> PM</p>
+                        <p><strong>Registro original:</strong> <?= date('d/m/Y', strtotime($row['fecha_inicio'])) ?></p>
+                        <p><strong>Tipo de solicitud:</strong> Incidencia</p>
+                        <p><strong>Cliente:</strong> <?= htmlspecialchars($row['nombre_cliente']) ?></p>
+                        <p><strong>Título:</strong> <?= htmlspecialchars($row['titulo']) ?></p>
+                        <p><strong>Descripción:</strong> <?= htmlspecialchars($row['descripcion']) ?></p>
+                        <p><strong>Prioridad:</strong> <?= htmlspecialchars($row['nombre_prioridad']) ?></p>
+                        <p><strong>Fecha fin:</strong> <?= date('d/m/Y', strtotime($row['fecha_fin'])) ?></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Comentarios Existentes -->
+            <?php if (!empty($row['comentarios'])): ?>
+            <div class="timeline-item">
+                <div class="timeline-icon comment-icon">
+                    <i class="fas fa-comment"></i>
+                </div>
+                <div class="timeline-content">
+                    <div class="timeline-header">
+                        <span class="comment-badge">Comentario existente</span>
+                        <span class="timeline-date"><?= date('d/m/Y H:i', strtotime($row['fecha_fin'])) ?> PM</span>
+                    </div>
+                    <div class="timeline-details">
+                        <p><?= htmlspecialchars($row['comentarios']) ?></p>
+                    </div>
+                </div>
+            </div>
+            <?php endif; ?>
+        </div>
+
+        <!-- Formulario para agregar comentario -->
+        <div class="add-comment-section">
+            <h3>Agregar Comentario</h3>
+            <form action="../php/seguimiento.php" method="post" enctype="multipart/form-data">
                 <input type="hidden" name="id_incidencia" value="<?= htmlspecialchars($row['id_incidencia']) ?>">
- <div class="form-group">
-<label for="comentario">Comentario:</label><br>
-<textarea id="comentario" name="comentario" rows="5" cols="40" placeholder="Escribe tu comentario aquí..."><?= htmlspecialchars($row['comentarios']) ?></textarea>
+                <input type="hidden" name="id_cliente" value="<?= htmlspecialchars($row['id_cliente']) ?>">
+                <input type="hidden" name="titulo" value="<?= htmlspecialchars($row['titulo']) ?>">
+                <input type="hidden" name="descripcion" value="<?= htmlspecialchars($row['descripcion']) ?>">
+                <input type="hidden" name="id_prioridad" value="<?= htmlspecialchars($row['id_prioridad']) ?>">
+                <input type="hidden" name="fecha_inicio" value="<?= htmlspecialchars($row['fecha_inicio']) ?>">
+                <input type="hidden" name="fecha_fin" value="<?= htmlspecialchars($row['fecha_fin']) ?>">
 
-
-</div>
-
-
-
-           <div class="form-group">
-                         <label for="">Estado:</label>
-      <select name="id_estado" id="id_estado">
-                <option value="">-- Seleccione --</option>
-                <?php
-                // Consulta
-$sql = "SELECT 
-    id_estado, 
-    nombre_estado
-FROM 
-    estados_reclamos;";
-$result_reclamos = $conn->query($sql);
-                if ($result_reclamos->num_rows > 0) {
-              // Salida de cada fila
-              while ($rowReclamo = $result_reclamos->fetch_assoc()) {
-                        $selected = (  $row["id_estado"]==$rowReclamo["id_estado"]) ? ' selected' : '';
-                        echo '<option value="' . $rowReclamo["id_estado"] . '"' . $selected . '>' .
-                        htmlspecialchars($rowReclamo["nombre_estado"]) .
-                        '</option>';
-              }
-          } else {
-              echo '<option value="">No hay estados</option>';
-          } ?>
-            </select></div>
-                
-                            <div class="form-group">
-                         <label for="">Cliente:</label>
-      <select name="id_cliente" id="id_cliente">
-                <option value="">-- Seleccione --</option>
-                <?php
-                // Consulta
-$sql = "SELECT 
-    id_cliente, 
-    CONCAT_WS(' ', nombres, apellido_paterno, apellido_materno) AS dato
-FROM 
-    clientes;";
-$result_cliente2 = $conn->query($sql);
-                if ($result_cliente2->num_rows > 0) {
-              // Salida de cada fila
-              while ($row2 = $result_cliente2->fetch_assoc()) {
-                        $selected = ($row["id_cliente"] == $row2["id_cliente"]) ? ' selected' : '';
-                        echo '<option value="' . $row2["id_cliente"] . '"' . $selected . '>' . 
-                            htmlspecialchars($row2["dato"]) . 
-                            '</option>';
-                    }
-          } else {
-              echo '<option value="">No hay clientes</option>';
-          } ?>
-            </select></div>
                 <div class="form-group">
-                    <label >Titulo:</label>
-                    <input type="text" name="titulo" value="<?= htmlspecialchars($row['titulo']) ?>"
-                        required>
-                </div>
-                <div class="form-group">
-                    <label>Descripción:</label>
-                    <input type="text" name="descripcion" value="<?= htmlspecialchars($row['descripcion']) ?>"
-                        required>
-                </div>
-          
-                <div class="form-group">
-                         <label for="">Prioridad:</label>
-      <select name="id_prioridad" id="id_prioridad">
-                <option value="">-- Seleccione --</option>
-                <?php
-                // Consulta
-$sql = "SELECT 
-    id_prioridad, 
-    descripcion
-FROM 
-    prioridad;";
-$result_prioridad = $conn->query($sql);
-                if ($result_prioridad->num_rows > 0) {
-              // Salida de cada fila
-                    while ($rowPrioridad = $result_prioridad->fetch_assoc()) {
-                        $selected = ($row["id_prioridad"] == $rowPrioridad["id_prioridad"]) ? ' selected' : '';
-                        echo '<option value="' . $rowPrioridad["id_prioridad"] . '"' . $selected . '>' . 
-                            htmlspecialchars($rowPrioridad["descripcion"]) . 
-                            '</option>';
-                    }
-          } else {
-              echo '<option value="">No hay estados</option>';
-          } ?>
-            </select></div>
-                <div class="form-group">
-                    
-                    <label >Fecha Inicio:</label>
-                    <input type="text" name="fecha_inicio" value="<?= htmlspecialchars($row['fecha_inicio']) ?>" required>
-                </div>
-                <div class="form-group">
-                    <label >Fecha Fin:</label>
-                    <input type="text" name="fecha_fin" value="<?= htmlspecialchars($row['fecha_fin']) ?>" required>
-                </div>
-                <div class="form-group">
-                    <label>Archivo actual: <?= htmlspecialchars($row['archivo']) ?></label><br>
-                    <input type="file" name="archivo">
+                    <label for="comentario_<?= $row['id_incidencia'] ?>">Nuevo Comentario:</label>
+                    <textarea id="comentario_<?= $row['id_incidencia'] ?>" name="comentario" rows="4" cols="50" placeholder="Escriba su comentario aquí..." required></textarea>
                 </div>
 
+                <div class="form-group">
+                    <label for="id_estado_<?= $row['id_incidencia'] ?>">Cambiar Estado:</label>
+                    <select name="id_estado" id="id_estado_<?= $row['id_incidencia'] ?>" required>
+                        <option value="">-- Seleccione Estado --</option>
+                        <?php
+                        $sql_estados = "SELECT id_estado, nombre_estado FROM estados_reclamos;";
+                        $result_estados_modal = $conn->query($sql_estados);
+                        if ($result_estados_modal && $result_estados_modal->num_rows > 0) {
+                            while ($row_estado_modal = $result_estados_modal->fetch_assoc()) {
+                                $selected_estado = ($row["id_estado"] == $row_estado_modal["id_estado"]) ? ' selected' : '';
+                                echo '<option value="' . htmlspecialchars($row_estado_modal["id_estado"]) . '"' . $selected_estado . '>' .
+                                     htmlspecialchars($row_estado_modal["nombre_estado"]) .
+                                     '</option>';
+                            }
+                        }
+                        ?>
+                    </select>
+                </div>
 
                 <div class="form-actions">
                     <button type="submit" class="btn-guardar" name="editar">
-                        <i class="fas fa-save"></i> Guardar Cambios
+                        <i class="fas fa-save"></i> Guardar Comentario
                     </button>
-                    <button onclick="cerrarModal('modalEditar<?= $row['id_incidencia'] ?>')" type="button" class="btn-cerrar" name="cerrar">
-    <i class="fas fa-times"></i> Cerrar
-</button>
+                    <button type="button" class="btn-cerrar" onclick="cerrarModal('modalEditar<?= $row['id_incidencia'] ?>')">
+                        <i class="fas fa-times"></i> Cerrar
+                    </button>
                 </div>
             </form>
+            <!-- Historial de seguimiento -->
+            <div class="historial-section">
+                <h3>Historial de Seguimiento</h3>
+                <?php
+                $sqlHist = "SELECT estado_anterior, estado_nuevo, comentario, fecha_hora
+                            FROM historial_seguimiento
+                            WHERE id_incidencia = ?
+                            ORDER BY fecha_hora ASC";
+                $stmtHist = $conn->prepare($sqlHist);
+                $stmtHist->bind_param("i", $row['id_incidencia']);
+                $stmtHist->execute();
+                $resultHist = $stmtHist->get_result();
+
+                if ($resultHist->num_rows > 0) {
+                    while ($rowHist = $resultHist->fetch_assoc()) {
+                        echo "<div class='historial-comentario'>";
+                        echo "<strong>" . htmlspecialchars($rowHist['fecha_hora']) . "</strong>: ";
+                        echo "<em>" . htmlspecialchars($rowHist['estado_anterior']) . " ➜ " . htmlspecialchars($rowHist['estado_nuevo']) . "</em><br>";
+                        echo nl2br(htmlspecialchars($rowHist['comentario']));
+                        echo "</div><hr>";
+                    }
+                } else {
+                    echo "<p>No hay historial aún.</p>";
+                }
+                $stmtHist->close();
+                ?>
+            </div>
         </div>
     </div>
-    <?php endwhile; ?>
+</div>
+<?php endwhile; ?>
 
 <!-- Modal Insertar -->
 <div id="modalInsertar" class="modal">

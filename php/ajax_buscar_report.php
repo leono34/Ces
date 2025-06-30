@@ -75,16 +75,6 @@ if ($stmt_lista) {
                 $output .= 'N/A';
             }
             $output .= '</td>';
-            $output .= '<td class="acciones">';
-            $output .= '<button class="btn-editar" onclick="abrirModal(\'modalEditar' . $row["id_incidencia"] . '\')"><i class="fas fa-edit"></i> Editar</button>';
-            // El formulario de eliminar es más complejo de replicar aquí sin cambiar la lógica de eliminación.
-            // Por simplicidad, podrías necesitar que la eliminación siga siendo una recarga de página,
-            // o cambiar la eliminación para que también sea AJAX, lo cual está fuera del alcance actual.
-            // Aquí solo se incluye el botón de editar para mantener la funcionalidad del modal.
-            // Para el botón de eliminar:
-            $output .= '<form method="get" action="/programacion/php/incidencias.php" onsubmit="return confirm(\'¿Eliminar esta incidencia?\')" style="display:inline;">';
-            $output .= '<input type="hidden" name="eliminar" value="' . $row["id_incidencia"] . '">';
-            $output .= '<button class="btn-eliminar" type="submit"><i class="fas fa-trash-alt"></i> Eliminar</button>';
             $output .= '</form>';
             $output .= '</td>';
             $output .= '</tr>';

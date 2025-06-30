@@ -144,20 +144,29 @@ document.addEventListener('click', function(event) {
     if (event.target && event.target.id === 'btnBuscarIncidencia') { // Para búsqueda de incidencias
         buscarIncidencias();
     }
+    if (event.target && event.target.id === 'btnBuscarReport') { // Para búsqueda de reportes
+        buscarReportes();
+    }
     if (event.target && event.target.id === 'btnBuscarSeguimiento') { // Para búsqueda de seguimientos
         buscarSeguimientos(); // Por defecto, no limpia filtros
     }
     if (event.target && event.target.id === 'btnLimpiarFiltroSeguimiento') { // Para limpiar filtros de seguimientos
         buscarSeguimientos(true); // Indica que se deben limpiar los filtros
     }
-    if (event.target && event.target.id === 'btnGenerarReporteIncidencia') {
+    if (event.target && event.target.id === 'btnLimpiarFiltroReport') { // Para limpiar filtros de seguimientos
+        buscarReportes(true); // Indica que se deben limpiar los filtros
+    }
+    if (event.target && event.target.id === 'btnLimpiarFiltroIncidencias') { // Para limpiar filtros de seguimientos
+        buscarIncidencias(true); // Indica que se deben limpiar los filtros
+    }
+    if (event.target && event.target.id === 'btnGenerarReportePDF') {
         event.preventDefault(); // Prevenir la acción por defecto del enlace
-        generarReporteIncidencias();
+        btnGenerarReportePDF();
     }
 });
 
-function generarReporteIncidencias() {
-    const tipoBusquedaElement = document.getElementById('tipo_busqueda_incidencia');
+function btnGenerarReportePDF() {
+    const tipoBusquedaElement = document.getElementById('tipo_busqueda_report');
     const valorBusquedaElement = document.getElementById('valor_busqueda');
 
     let tipoFiltro = '';
@@ -173,19 +182,11 @@ function generarReporteIncidencias() {
         params.append('tipo_filtro', tipoFiltro);
         if (valorFiltro) { // Y si hay un valor de búsqueda
              params.append('valor_filtro', valorFiltro);
-        } else if (tipoFiltro && !valorFiltro) {
         }
     }
-    if (tipoFiltro && valorFiltro) {
-        // params ya tiene tipo_filtro
-    } else if (tipoFiltro && !valorFiltro) {
-    }
-
-
     const url = `../php/generar_reporte_incidencias_pdf.php?${params.toString()}`;
     window.location.href = url; // Redirigir para descargar/ver el PDF
 }
-
 
 function buscarSeguimientos(limpiarFiltros = false) {
     const tipoBusquedaElement = document.getElementById('tipo_busqueda_seguimiento');
@@ -201,7 +202,10 @@ function buscarSeguimientos(limpiarFiltros = false) {
     let tipoBusqueda = '';
     let valorBusqueda = '';
 
-    if (!limpiarFiltros) {
+    if (limpiarFiltros) {
+        if (tipoBusquedaElement) tipoBusquedaElement.selectedIndex = 0;
+        if (valorBusquedaElement) valorBusquedaElement.value = '';
+    } else {
         if (!tipoBusquedaElement || !valorBusquedaElement) {
             console.error("Elementos de búsqueda de seguimiento no encontrados en el DOM.");
             return;
@@ -247,8 +251,7 @@ function buscarSeguimientos(limpiarFiltros = false) {
             tablaBody.innerHTML = '<tr><td colspan="11" style="text-align:center; color:red;">Error al cargar los datos de seguimiento.</td></tr>';
         });
 }
-
-
+// Buscar incidencias
 function buscarIncidencias() {
     const tipoBusquedaElement = document.getElementById('tipo_busqueda_incidencia');
     const valorBusquedaElement = document.getElementById('valor_busqueda');
@@ -311,6 +314,137 @@ function buscarIncidencias() {
         });
 }
 
+// limpiar casillas
+function buscarIncidencias(limpiarFiltros = false) {
+    const tipoBusquedaElement = document.getElementById('tipo_busqueda_incidencia');
+    const valorBusquedaElement = document.getElementById('valor_busqueda');
+    const tablaBody = document.querySelector('#tablaIncidencias tbody'); // Asumiendo que la tabla tiene id="tablaSeguimientos"
+
+    if (!tablaBody) {
+        console.error('No se encontró el tbody de la tabla de seguimientos (#tablaReport tbody).');
+        return;
+    }
+
+    let params = new URLSearchParams();
+    let tipoBusqueda = '';
+    let valorBusqueda = '';
+
+    if (limpiarFiltros) {
+        if (tipoBusquedaElement) tipoBusquedaElement.selectedIndex = 0;
+        if (valorBusquedaElement) valorBusquedaElement.value = '';
+    } else {
+        if (!tipoBusquedaElement || !valorBusquedaElement) {
+            console.error("Elementos de búsqueda de seguimiento no encontrados en el DOM.");
+            return;
+        }
+        tipoBusqueda = tipoBusquedaElement.value;
+        valorBusqueda = valorBusquedaElement.value.trim();
+
+        if (tipoBusqueda && valorBusqueda === '') {
+            alert('Por favor, ingrese un valor para la búsqueda.');
+            return;
+        }
+        if (!tipoBusqueda && valorBusqueda !== '') {
+            alert('Por favor, seleccione un tipo de búsqueda.');
+            return;
+        }
+        if (tipoBusqueda) { // Solo añadir parámetros si hay un tipo de búsqueda
+            params.append('tipo_filtro', tipoBusqueda);
+            params.append('valor_filtro', valorBusqueda);
+        }
+    }
+    // Si limpiarFiltros es true, params se queda vacío, y el backend debería devolver todos los seguimientos.
+
+    const urlBase = '../php/ajax_buscar_incidencias.php';
+    const queryString = params.toString();
+    const fetchUrl = queryString ? `${urlBase}?${queryString}` : urlBase;
+
+    // Actualizar URL del navegador
+    const newBrowserUrl = queryString ? `${window.location.pathname}?${queryString}` : window.location.pathname;
+    window.history.pushState({ path: newBrowserUrl }, '', newBrowserUrl);
+
+    fetch(fetchUrl)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Error HTTP: ${response.status}`);
+            }
+            return response.text();
+        })
+        .then(html => {
+            tablaBody.innerHTML = html;
+        })
+        .catch(error => {
+            console.error('Error en la petición fetch para seguimientos:', error);
+            tablaBody.innerHTML = '<tr><td colspan="11" style="text-align:center; color:red;">Error al cargar los datos de seguimiento.</td></tr>';
+        });
+
+}
+
+// limpiar casillas
+function buscarReportes(limpiarFiltros = false) {
+    const tipoBusquedaElement = document.getElementById('tipo_busqueda_report');
+    const valorBusquedaElement = document.getElementById('valor_busqueda');
+    const tablaBody = document.querySelector('#tablaReport tbody'); // Asumiendo que la tabla tiene id="tablaSeguimientos"
+
+    if (!tablaBody) {
+        console.error('No se encontró el tbody de la tabla de seguimientos (#tablaReport tbody).');
+        return;
+    }
+
+    let params = new URLSearchParams();
+    let tipoBusqueda = '';
+    let valorBusqueda = '';
+
+    if (limpiarFiltros) {
+        if (tipoBusquedaElement) tipoBusquedaElement.selectedIndex = 0;
+        if (valorBusquedaElement) valorBusquedaElement.value = '';
+    } else {
+        if (!tipoBusquedaElement || !valorBusquedaElement) {
+            console.error("Elementos de búsqueda de seguimiento no encontrados en el DOM.");
+            return;
+        }
+        tipoBusqueda = tipoBusquedaElement.value;
+        valorBusqueda = valorBusquedaElement.value.trim();
+
+        if (tipoBusqueda && valorBusqueda === '') {
+            alert('Por favor, ingrese un valor para la búsqueda.');
+            return;
+        }
+        if (!tipoBusqueda && valorBusqueda !== '') {
+            alert('Por favor, seleccione un tipo de búsqueda.');
+            return;
+        }
+        if (tipoBusqueda) { // Solo añadir parámetros si hay un tipo de búsqueda
+            params.append('tipo_filtro', tipoBusqueda);
+            params.append('valor_filtro', valorBusqueda);
+        }
+    }
+    // Si limpiarFiltros es true, params se queda vacío, y el backend debería devolver todos los seguimientos.
+
+    const urlBase = '../php/ajax_buscar_report.php';
+    const queryString = params.toString();
+    const fetchUrl = queryString ? `${urlBase}?${queryString}` : urlBase;
+
+    // Actualizar URL del navegador
+    const newBrowserUrl = queryString ? `${window.location.pathname}?${queryString}` : window.location.pathname;
+    window.history.pushState({ path: newBrowserUrl }, '', newBrowserUrl);
+
+    fetch(fetchUrl)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Error HTTP: ${response.status}`);
+            }
+            return response.text();
+        })
+        .then(html => {
+            tablaBody.innerHTML = html;
+        })
+        .catch(error => {
+            console.error('Error en la petición fetch para seguimientos:', error);
+            tablaBody.innerHTML = '<tr><td colspan="11" style="text-align:center; color:red;">Error al cargar los datos de seguimiento.</td></tr>';
+        });
+
+}
 
 
 // codigo del dashboard

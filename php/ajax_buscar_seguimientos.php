@@ -12,11 +12,8 @@ if ($conn->connect_error) {
     die("Conexión fallida: " . $conn->connect_error);
 }
 
-$output = ''; // Variable para almacenar el HTML de las filas
+$output = ''; 
 
-// La consulta base es similar a la de incidencias, ya que operamos sobre la tabla 'incidencia'
-// y asumimos que 'i.comentarios' existe en la tabla 'incidencia'.
-// Si 'comentarios' no está en 'i.*', deberá añadirse explícitamente.
 $sql_base = "SELECT i.*, e.nombre_estado,
              CONCAT_WS(' ', c.nombres, c.apellido_paterno, c.apellido_materno) AS nombre_cliente,
              p.descripcion AS nombre_prioridad
@@ -80,19 +77,6 @@ if ($stmt_lista) {
             $output .= '<td>' . htmlspecialchars($row["nombre_prioridad"]) . '</td>';
             $output .= '<td>' . htmlspecialchars($row["fecha_inicio"]) . '</td>';
             $output .= '<td>' . htmlspecialchars($row["fecha_fin"]) . '</td>';
-
-            $output .= '<td>';
-            if (!empty($row['archivo'])) {
-                $output .= '<a href="../php/uploads/' . rawurlencode($row['archivo']) . '" target="_blank">';
-                $output .= '<i class="fas fa-file-alt"></i> Ver archivo';
-                $output .= '</a>';
-            } else {
-                // En la tabla de seguimiento original, si el archivo está vacío, muestra $row["archivo"] que estaría vacío.
-                // Podríamos poner 'N/A' o dejarlo como estaba.
-                $output .= htmlspecialchars($row["archivo"]); // O 'N/A'
-            }
-            $output .= '</td>';
-
             $output .= '<td>' . htmlspecialchars($row["nombre_estado"]) . '</td>';
             // Asumiendo que 'comentarios' es un campo en la tabla 'incidencia'
             $output .= '<td>' . htmlspecialchars($row["comentarios"] ?? '') . '</td>'; // Usar ?? '' por si es NULL

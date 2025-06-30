@@ -33,12 +33,13 @@ include '../php/incidencias.php';
             </div>
             <div class="d-grid gap-2 d-md-flex justify-content-md-start mb-3">
                 <button  id="btnBuscarIncidencia" class="btn btn-success fw-bold" type="button">BUSCAR</button>
+                <button  id="btnLimpiarFiltroIncidencias" class="btn btn-secondary fw-bold" type="button">Limpiar Filtros</button>
             </div>
     </div>
 
     
   <button class="btn-nuevo" onclick="abrirModal('modalInsertar')"> <i class="fas fa-plus"></i> Nueva Incidencia</button>
-    <table>
+    <table id="tablaIncidencias">
         <thead>
             <tr>
                 <th>Cliente</th>

@@ -20,7 +20,7 @@ include '../php/incidencias.php';
     <div class="buscar-container">
             <div class="row g-2 mb-2">
                 <div class="col-md-4">
-                    <select  class="form-select" id="tipo_busqueda_incidencia" aria-label="Tipo de búsqueda">
+                    <select  class="form-select" id="tipo_busqueda_report" aria-label="Tipo de búsqueda">
                         <option selected value="">Tipo de búsqueda</option>
                         <option value="dni_cliente">Por Dni Cliente</option>
                         <option value="prioridad">Por Prioridad</option>
@@ -31,12 +31,13 @@ include '../php/incidencias.php';
                 </div>
             </div>
             <div class="d-grid gap-2 d-md-flex justify-content-md-start mb-3">
-                <button  id="btnBuscarIncidencia" class="btn btn-success fw-bold" type="button">BUSCAR</button>
+                <button  id="btnBuscarReport" class="btn btn-success fw-bold" type="button">BUSCAR</button>
                 <button  id="btnGenerarReportePDF" class="btn btn-danger fw-bold" type="button">GENERAR REPORTE PDF</button>
+                <button  id="btnLimpiarFiltroReport" class="btn btn-secondary fw-bold" type="button">Limpiar Filtros</button>
             </div>
     </div>
 
-    <table>
+    <table id="tablaReport">
         <thead>
             <tr>
                 <th>Cliente</th>
@@ -74,20 +75,20 @@ include '../php/incidencias.php';
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const btnGenerarReportePDF = document.getElementById('btnGenerarReportePDF');
-    if (btnGenerarReportePDF) {
+    if (!btnGenerarReportePDF) {
+            console.error('Botón btnGenerarReportePDF no encontrado.');
+            return;
+    }
         btnGenerarReportePDF.addEventListener('click', function() {
-            const tipoBusqueda = document.getElementById('tipo_busqueda_incidencia').value;
-            const valorBusqueda = document.getElementById('valor_busqueda').value;
+            const tipoBusqueda = document.getElementById('tipo_busqueda_report')?.value;
+            const valorBusqueda = document.getElementById('valor_busqueda')?.value.trim();
+
 
             let url = '../php/generar_reporte_incidencias_pdf.php';
             const params = new URLSearchParams();
 
-            if (tipoBusqueda) {
-                params.append('tipo_busqueda', tipoBusqueda);
-            }
-            if (valorBusqueda) {
-                params.append('valor_busqueda', valorBusqueda);
-            }
+            if (tipoBusqueda) params.append('tipo_busqueda', tipoBusqueda);
+            if (valorBusqueda) params.append('valor_busqueda', valorBusqueda);
 
             if (params.toString()) {
                 url += '?' + params.toString();
@@ -97,23 +98,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Script para la búsqueda existente (si es necesario adaptarlo o asegurarse de que no haya conflictos)
-    const btnBuscarIncidencia = document.getElementById('btnBuscarIncidencia');
-    if (btnBuscarIncidencia) {
-        btnBuscarIncidencia.addEventListener('click', function() {
-            const tipoBusqueda = document.getElementById('tipo_busqueda_incidencia').value;
-            const valorBusqueda = document.getElementById('valor_busqueda').value;
-
-            let queryParams = '';
-            if (tipoBusqueda && valorBusqueda) {
-                queryParams = `?tipo_busqueda_incidencia=${encodeURIComponent(tipoBusqueda)}&valor_busqueda_incidencia=${encodeURIComponent(valorBusqueda)}`;
-            } else if (tipoBusqueda) {
-            }
-
-            // Actualiza la URL de la página actual para realizar la búsqueda
-            window.location.href = `registrar_clien.php${queryParams}`;
-        });
-    }
 
     // Adjuntar eventos de cierre a todos los botones de cerrar modal
     var closeButtons = document.querySelectorAll('.modal .close');
@@ -123,6 +107,6 @@ document.addEventListener('DOMContentLoaded', function() {
             cerrarModal(modalId);
         }
     });
-});
+);
 </script>
 </body>
